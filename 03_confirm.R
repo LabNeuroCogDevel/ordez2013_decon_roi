@@ -1,7 +1,11 @@
 library(ggplot2)
 library(dplyr)
 
-d_mean_only <- read.csv(file="glm_means.csv")
+d_mean_only <- read.csv(file="glm_means.csv") %>%
+   mutate(ageC=age-mean(age),
+          ageC2=ageC^2,
+          invageC=1/ageC)
+
 ggplot(d_mean_only) +
    aes(y=AScorr, x=age, color=sex, group=`id`) +
    #geom_point() + geom_line() +
@@ -10,7 +14,7 @@ ggplot(d_mean_only) +
    see::theme_modern()
 
 
-phack <- d_mean_only |> split(d_mean_only$roinum) |> sapply(function(x) coef(summary(lm(ASerrorCo~age,data=x)))[2,"Pr(>|t|)"]) 
+phack <- d_mean_only |> split(d_mean_only$roinum) |> sapply(function(x) coef(summary(lm(ASerrorCo~ageC,data=x)))[2,"Pr(>|t|)"]) 
 #          1           2           3           4           5           6 
 #0.084942343 0.035268150 0.020171441 0.008404087 0.048423944 0.080818894 
 #          7           8           9          10          11          12 
@@ -23,13 +27,19 @@ phack <- d_mean_only |> split(d_mean_only$roinum) |> sapply(function(x) coef(sum
 # >Mean growth curve for error processing (dACC during corrected error trials) indicates increases in the percentage of signal change with age.
 FEF_L <- d_mean_only |> filter(roinum==2) # > p=.029 in ordez 2013
 dACC <- d_mean_only |> filter(roinum==18) # > p=.000 in ordez 2013
-m <- lmerTest::lmer(ASerrorCo ~ age + (1|id),data=dACC)
-summary(m)
+fml <- ASerrorCo ~ ageC + (1|id)
+m <- lme4::lmer(fml,data=dACC)
+
+summary(lmerTest::lmer(fml,data=dACC))
 #Fixed effects:
-#              Estimate Std. Error         df t value Pr(>|t|)
-#(Intercept) -5.260e-03  1.540e-02  1.310e+02  -0.342    0.733
-#age          1.253e-03  8.946e-04  1.326e+02   1.401    0.164
+#             Estimate Std. Error        df t value Pr(>|t|)    
+#(Intercept) 1.570e-02  3.649e-03 7.235e+01   4.302 5.22e-05 ***
+#ageC        1.253e-03  8.946e-04 1.326e+02   1.401    0.164    
+#Correlation of Fixed Effects:
+#     (Intr)
+#ageC 0.002 
 
 anova(m)
-#       Sum Sq   Mean Sq NumDF DenDF F value Pr(>F)
-#age 0.0074754 0.0074754     1 132.6   1.962 0.1636
+#Analysis of Variance Table
+#     npar    Sum Sq   Mean Sq F value
+#ageC    1 0.0074754 0.0074754   1.962
