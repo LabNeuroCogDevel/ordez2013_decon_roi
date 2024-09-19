@@ -38,23 +38,3 @@ write.csv(file="glm_allmeaures_long.csv", d_long)
 write.csv(file="glm_means.csv", d_mean_only)
 
 #> Thus, a total of 312 visits from 129 individuals spanning ages 8.1 to 28.9 years were included in initial statistical analyses
-
-library(ggplot2)
-d_mean_only %>%
-   #filter(roinum %in% c(9,10)) %>%
-   ggplot() +
-   aes(y=AScorr, x=age, color=sex, group=`id`) +
-   #geom_point() + geom_line() +
-   geom_smooth(aes(group=NULL)) +
-   facet_wrap(~roinum) +
-   see::theme_modern()
-
-
-d_mean_only %>% split(.$roinum) %>% lapply(function(x) coef(summary(lm(age~ASerrorCo,data=x))))#[2,"Pr(>|t|)"]) 
-
-# https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3828464/
-# >Mean growth curve for error processing (dACC during corrected error trials) indicates increases in the percentage of signal change with age.
-FEF_L <- d_mean_only %>% filter(roinum==2) # > p=.029 in ordez 2013
-dACC <- d_mean_only %>% filter(roinum==18) # > p=.000 in ordez 2013
-m <- lme4::lmer(age~ASerrorCo + (1|id),data=dACC)
-summary(m)
